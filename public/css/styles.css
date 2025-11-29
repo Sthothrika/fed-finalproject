@@ -1,0 +1,107 @@
+:root{
+	--primary: #ff3e6c;
+	--accent: #ffb26b;
+	--brand-color: #1e88ff;
+	--muted: #6c7a89;
+	--card-bg: #ffffff;
+}
+
+html,body{height:100%;}
+body{background:linear-gradient(180deg,#f6f7fb 0%, #fbfdff 100%);font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#222;}
+.navbar-brand{color:var(--brand-color) !important;font-weight:800;font-size:1.25rem}
+.navbar{background:transparent;border-bottom:0;padding-top:18px;padding-bottom:8px}
+
+.container main{padding-top:20px}
+
+.card{border-radius:12px}
+.card .card-body{padding:1.25rem}
+.card-img-top{height:220px;object-fit:cover;border-top-left-radius:12px;border-top-right-radius:12px}
+.img-fluid{max-height:220px;object-fit:cover}
+
+/* Resource image wrappers to ensure SVGs and photos scale nicely */
+.resource-image-wrap{height:180px;overflow:hidden;border-top-left-radius:12px;border-bottom-left-radius:12px}
+.resource-image{width:100%;height:100%;object-fit:cover;display:block}
+
+.resource-hero{height:320px;overflow:hidden;border-radius:12px;margin-bottom:18px}
+.resource-hero-image{width:100%;height:100%;object-fit:cover;display:block}
+
+.btn-primary{background:var(--primary);border-color:var(--primary);box-shadow:0 6px 18px rgba(255,62,108,0.12)}
+.btn-outline-primary{color:var(--primary);border-color:rgba(13,110,253,0.12)}
+.btn{border-radius:10px}
+
+.auth-hero{background:transparent;color:var(--muted);padding:20px 0;text-align:center}
+.auth-card{max-width:560px;margin:30px auto 40px}
+.auth-card .card-body{padding:2rem}
+.auth-card .form-control{border-radius:10px}
+.auth-card .btn{border-radius:40px;padding:12px 20px}
+
+.landing-hero{padding:40px 0}
+.landing-hero h1{font-weight:800;font-size:48px;margin-bottom:12px}
+.landing-hero p.lead{font-size:18px;color:#6b7280}
+
+.card.p-3.shadow-sm{box-shadow:0 6px 20px rgba(23,31,43,0.06)}
+
+footer{border-top:1px solid #eef2f6}
+
+@media (max-width:767px){
+	.auth-card{margin:0 12px -40px}
+	.landing-hero h1{font-size:36px}
+}
+
+/* Additional polish styles */
+.navbar-brand .logo-mark{display:inline-block;width:28px;height:28px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:6px;margin-right:8px;vertical-align:middle;box-shadow:0 4px 14px rgba(255,62,108,0.18)}
+.navbar-nav .nav-link{color:var(--muted);margin-left:12px}
+.navbar-nav .nav-link:hover{color:var(--primary)}
+
+.landing-hero{background-image:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0));}
+
+.featured-section{padding-top:20px;padding-bottom:40px}
+.card:hover{transform:translateY(-6px);transition:transform .25s ease,box-shadow .25s ease}
+
+.resource-title{font-weight:700}
+.resource-desc{color:#6b7280}
+
+.auth-card .nav-tabs .nav-link{color:#6b7280}
+.auth-card .nav-tabs .nav-link.active{color:#111;border-bottom:3px solid var(--primary);font-weight:600}
+
+.auth-card .form-control:focus{box-shadow:0 8px 24px rgba(13,110,253,0.08);border-color:rgba(13,110,253,0.2)}
+
+.btn-danger{background:linear-gradient(90deg,var(--primary),#ff5b83);border:0}
+.btn-primary{background:linear-gradient(90deg,#3b82f6,#06b6d4);border:0}
+
+.footer .small{color:#94a3b8}
+
+.profile-badge{width:96px;height:128px;border-radius:10px;object-fit:cover;box-shadow:0 10px 30px rgba(16,24,40,0.08)}
+
+/* Admin quick cards */
+.admin-stats .display-6{font-size:28px}
+
+/* Utility helpers */
+.gap-3{gap:1rem}
+
+/* Center auth card vertically and style to match provided design */
+.app-body{min-height:100vh;display:flex;flex-direction:column}
+/* Center only for auth page */
+.auth-page main.container{flex:1;display:flex;align-items:center;justify-content:center;padding-top:0;padding-bottom:0}
+.auth-hero{height:180px;padding-top:26px;padding-bottom:26px}
+.auth-card{margin: -10px auto 40px; border-radius:14px}
+.auth-card .card-body{padding:2.5rem}
+.auth-card .form-control{height:52px;padding:14px 16px}
+.auth-card .nav-tabs{border-bottom:0}
+.auth-card .nav-tabs .nav-link{padding:10px 22px;border:0;border-radius:8px}
+.auth-card .nav-tabs .nav-link.active{background:#fff;border:0;box-shadow:0 8px 30px rgba(16,24,40,0.06)}
+.auth-card .tab-pane{padding-top:6px}
+.auth-card .btn{padding:14px;border-radius:40px;font-weight:700}
+.auth-card .btn-danger{background:linear-gradient(90deg,#ff5b8c,#ff6b6b);box-shadow:0 10px 30px rgba(255,91,140,0.15)}
+.auth-card .btn-primary{background:linear-gradient(90deg,#7c3aed,#06b6d4)}
+.auth-hero h2{font-weight:800}
+.auth-card .small{color:#98a0a7}
+
+/* make footer less prominent on auth */
+footer{padding:28px 0}
+
+@media (max-width:576px){
+	.auth-card{margin: -24px 12px 24px}
+	.auth-hero{height:120px}
+}
+

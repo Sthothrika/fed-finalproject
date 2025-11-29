@@ -1,0 +1,33 @@
+<h1><%= resource ? 'Edit Resource' : 'Add New Resource' %></h1>
+
+<form action="<%= resource ? '/admin/update/' + resource.id : '/admin/add' %>" method="post">
+  <div class="mb-3">
+    <label class="form-label">Title</label>
+    <input class="form-control" name="title" value="<%= resource ? resource.title : '' %>" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Category</label>
+    <select class="form-select" name="category">
+      <option value="mental-health" <%= resource && resource.category === 'mental-health' ? 'selected' : '' %>>Mental Health</option>
+      <option value="program" <%= resource && resource.category === 'program' ? 'selected' : '' %>>Program</option>
+      <option value="nutrition" <%= resource && resource.category === 'nutrition' ? 'selected' : '' %>>Nutrition</option>
+      <option value="general" <%= resource && resource.category === 'general' ? 'selected' : '' %>>General</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Image URL</label>
+    <input class="form-control" name="image" value="<%= resource ? resource.image : '' %>">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Link (optional)</label>
+    <input class="form-control" name="link" value="<%= resource ? resource.link : '' %>">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" name="description" rows="4"><%= resource ? resource.description : '' %></textarea>
+  </div>
+  <div>
+    <button class="btn btn-primary"><%= resource ? 'Update' : 'Create' %></button>
+    <a href="/admin" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+</form>

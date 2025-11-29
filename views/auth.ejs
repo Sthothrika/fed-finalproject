@@ -1,0 +1,66 @@
+<div class="auth-hero">
+  <h2 class="mb-0">StuHealth - Student & Wellness</h2>
+</div>
+
+<div class="card auth-card shadow-lg">
+  <div class="card-body">
+    <ul class="nav nav-tabs justify-content-center mb-4" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link <%= active === 'login' ? 'active' : '' %>" id="login-tab" data-bs-toggle="tab" href="#login" role="tab">Login</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link <%= active === 'signup' ? 'active' : '' %>" id="signup-tab" data-bs-toggle="tab" href="#signup" role="tab">Sign Up</a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade <%= active === 'login' ? 'show active' : '' %>" id="login" role="tabpanel">
+        <h3 class="text-center mb-3">Login</h3>
+        <% if (error && active === 'login') { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <form method="post" action="/auth/login">
+          <div class="mb-3">
+            <input name="username" class="form-control" placeholder="Enter email or username" required>
+          </div>
+          <div class="mb-3">
+            <input name="password" type="password" class="form-control" placeholder="Enter password" required>
+          </div>
+          <div class="mb-3">
+            <select name="role" class="form-select">
+              <option value="student">Student</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-lg btn-danger">Login</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="tab-pane fade <%= active === 'signup' ? 'show active' : '' %>" id="signup" role="tabpanel">
+        <h3 class="text-center mb-3">Sign Up</h3>
+        <% if (error && active === 'signup') { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+        <form method="post" action="/auth/signup">
+          <div class="mb-3">
+            <input name="username" class="form-control" placeholder="Choose a username or email" required>
+          </div>
+          <div class="mb-3">
+            <input name="password" type="password" class="form-control" placeholder="Choose a password" required>
+          </div>
+          <div class="mb-3">
+            <select name="role" class="form-select">
+              <option value="student">Student</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-lg btn-primary">Create Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

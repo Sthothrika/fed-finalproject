@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="100%" height="100%" fill="#f1f5f9"/>
+  <g fill="#94a3b8">
+    <rect x="32" y="32" width="336" height="236" rx="8" ry="8" fill="#fff" stroke="#e2e8f0"/>
+    <text x="200" y="160" font-family="Arial, sans-serif" font-size="20" fill="#94a3b8" text-anchor="middle">Image placeholder</text>
+  </g>
+</svg>

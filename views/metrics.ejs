@@ -1,0 +1,67 @@
+<div class="mb-4">
+  <h1>Metrics</h1>
+  <p class="text-muted">Overview of resource usage</p>
+</div>
+
+<div class="row">
+  <div class="col-md-4 mb-4">
+    <div class="card p-3 shadow-sm">
+      <h5 class="mb-1">Total Views</h5>
+      <div class="display-6 fw-bold"><%= totalViews %></div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card p-3 shadow-sm">
+      <h5 class="mb-1">Resource Count</h5>
+      <div class="display-6 fw-bold"><%= resourceCount %></div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3 shadow-sm mb-4">
+  <canvas id="viewsChart" width="400" height="120"></canvas>
+</div>
+
+<div class="card p-3 shadow-sm">
+  <h5>Resource Details</h5>
+  <table class="table table-sm mt-3">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th class="text-end">Views</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% resources.forEach(function(r){ %>
+        <tr>
+          <td><%= r.title %></td>
+          <td><%= r.category %></td>
+          <td class="text-end"><%= r.views || 0 %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('viewsChart');
+  const labels = <%- JSON.stringify(resources.map(r => r.title)) %>;
+  const data = <%- JSON.stringify(resources.map(r => r.views || 0)) %>;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Views',
+        data: data,
+        backgroundColor: 'rgba(13,110,253,0.7)'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>

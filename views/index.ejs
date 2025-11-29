@@ -1,0 +1,38 @@
+<div class="row align-items-center mb-5">
+  <div class="col-md-7">
+    <h1 class="display-5 fw-bold">Welcome to StuHealth</h1>
+    <p class="lead text-muted">Your hub for campus mental health, fitness programs, and nutrition support. Explore resources, join wellness programs, and get confidential help.</p>
+    <p>
+      <a class="btn btn-primary btn-lg me-2" href="/resources">Explore Resources</a>
+      <a class="btn btn-outline-secondary btn-lg me-2" href="/programs">Wellness Programs</a>
+      <a class="btn btn-outline-success btn-lg me-2" href="/student/login">Student Login</a>
+      <a class="btn btn-outline-info btn-lg me-2" href="/student/signup">Student Signup</a>
+      <a class="btn btn-outline-dark btn-lg" href="/admin/login">Admin Login</a>
+    </p>
+  </div>
+  <div class="col-md-5 text-center">
+    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=5d7b1ad3b1b4b87f1b1d23f0f3f8a7c7" alt="Wellness" class="img-fluid rounded shadow-sm">
+  </div>
+</div>
+
+<h2 class="mb-4">Featured Resources</h2>
+<div class="row">
+  <% featured.forEach(function(r){ %>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <img src="<%= r.image %>" class="card-img-top" alt="<%= r.title %>">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title"><%= r.title %></h5>
+          <p class="card-text text-muted"><%= r.description.length > 120 ? r.description.substring(0,120)+"..." : r.description %></p>
+          <div class="mt-auto">
+            <a href="/resources/<%= r.id %>" class="btn btn-sm btn-primary">View</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="mt-5 text-center">
+  <a href="/support" class="btn btn-outline-primary">Get Support</a>
+</div>

@@ -1,0 +1,49 @@
+{
+  "resources": [
+    {
+      "id": "res-1",
+      "title": "Campus Counseling Services",
+      "description": "Free and confidential counseling for students. Book appointments or join drop-in hours for mental health support.",
+      "category": "mental-health",
+      "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=5d7b1ad3b1b4b87f1b1d23f0f3f8a7c7",
+      "link": "https://www.example.edu/counseling",
+      "views": 16
+    },
+    {
+      "id": "res-2",
+      "title": "Student Fitness Program",
+      "description": "Weekly group fitness classes and personalized plans to help you stay active. Open to all levels.",
+      "category": "program",
+      "image": "/images/fitness.svg",
+      "link": "https://www.example.edu/fitness",
+      "views": 9
+    },
+    {
+      "id": "res-3",
+      "title": "Nutrition Advice & Meal Planning",
+      "description": "Meet with a nutrition advisor to build healthy, affordable meal plans tailored to student life.",
+      "category": "nutrition",
+      "image": "/images/nutrition.svg",
+      "link": "https://www.example.edu/nutrition",
+      "views": 5
+    },
+    {
+      "id": "res-4",
+      "title": "Daily Routines for Wellbeing",
+      "description": "Simple morning and evening routines to improve mood, focus, and sleep. Includes short habits you can start today.",
+      "category": "health-tip",
+      "image": "/images/mental_health.svg",
+      "link": "https://www.example.edu/daily-routines",
+      "views": 0
+    },
+    {
+      "id": "res-5",
+      "title": "Yoga for Beginners",
+      "description": "Beginner-friendly yoga sequences to build flexibility and reduce stress. Watch guided videos below.",
+      "category": "yoga",
+      "image": "/images/fitness.svg",
+      "link": "https://www.example.edu/yoga",
+      "views": 0
+    }
+  ]
+}
