@@ -1,0 +1,69 @@
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="page-hero">
+      <h1 class="title">Feedback</h1>
+      <p class="subtitle">We appreciate your thoughts — tell us what you like or how we can improve.</p>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card p-3 shadow-sm">
+      <% if (success) { %>
+        <div class="alert alert-success">Thank you — your feedback was received.</div>
+      <% } %>
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+      <form method="post" action="/feedback">
+        <p class="text-muted small">Choose a category and urgency to help our team triage your feedback faster. You can leave name/email blank to submit anonymously.</p>
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input name="name" class="form-control" placeholder="Your name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input name="email" type="email" class="form-control" placeholder="your@email.edu">
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Category (optional)</label>
+            <select name="category" class="form-select">
+              <option value="">General</option>
+              <option value="website">Website / UI</option>
+              <option value="content">Content</option>
+              <option value="program">Programs</option>
+              <option value="counseling">Counseling / Support</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Urgency (optional)</label>
+            <select name="urgency" class="form-select">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Message</label>
+          <textarea name="message" class="form-control" rows="6" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Rating</label>
+          <select name="rating" class="form-select">
+            <option value="">Not set</option>
+            <option value="5">5 — Excellent</option>
+            <option value="4">4 — Good</option>
+            <option value="3">3 — Okay</option>
+            <option value="2">2 — Poor</option>
+            <option value="1">1 — Very poor</option>
+          </select>
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-primary">Send feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

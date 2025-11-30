@@ -8,11 +8,7 @@
       <% if (error) { %>
         <div class="alert alert-danger"><%= error %></div>
       <% } %>
-      <form method="POST" action="/student/profile/update" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label class="form-label">Avatar (optional)</label>
-          <input type="file" name="avatar" class="form-control">
-        </div>
+      <form method="POST" action="/student/profile/update">
         <div class="mb-3">
           <label class="form-label">Full name</label>
           <input name="full_name" class="form-control" value="<%= user.full_name || '' %>">
@@ -24,6 +20,10 @@
         <div class="mb-3">
           <label class="form-label">Phone</label>
           <input name="phone" class="form-control" value="<%= user.phone || '' %>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Age</label>
+          <input name="age" type="number" min="0" class="form-control" value="<%= typeof user.age !== 'undefined' && user.age !== null ? user.age : '' %>">
         </div>
         <div class="mb-3">
           <label class="form-label">Enrolled programs (comma separated)</label>

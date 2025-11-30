@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yoga icon">
+  <defs>
+    <linearGradient id="yog" x1="0" x2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="88" height="88" rx="12" fill="#fbfdff"/>
+  <g transform="translate(12,18)">
+    <circle cx="32" cy="10" r="8" fill="url(#yog)"/>
+    <path d="M6 52s10-18 26-18 26 18 26 18" stroke="url(#yog)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

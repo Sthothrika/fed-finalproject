@@ -1,0 +1,31 @@
+{
+  "doctors": [
+    {
+      "id": "doc-1",
+      "name": "Dr. Venkateswar Rao",
+      "title": "Consultant Psychiatrist",
+      "specialty": "Mental Health",
+      "email": "venkateswar.rao@example.edu",
+      "phone": "(555) 123-4567",
+      "image": "/images/doctors/venkateswar.jpg"
+    },
+    {
+      "id": "doc-2",
+      "name": "Dr. Sunitha",
+      "title": "Primary Care Physician",
+      "specialty": "General Health",
+      "email": "sunitha@example.edu",
+      "phone": "(555) 987-6543",
+      "image": "/images/doctors/sunitha.jpg"
+    },
+    {
+      "id": "doc-3",
+      "name": "Dr. Divya",
+      "title": "Registered Dietitian",
+      "specialty": "Nutrition",
+      "email": "divya@example.edu",
+      "phone": "(555) 222-3344",
+      "image": "/images/doctors/divya.jpg"
+    }
+  ]
+}

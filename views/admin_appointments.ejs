@@ -1,0 +1,46 @@
+<% layout('layout') -%>
+<div class="card">
+  <div class="card-body">
+    <h3>Appointment Requests</h3>
+    <% if (!appointments || appointments.length === 0) { %>
+      <p class="text-muted">No appointment requests yet.</p>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr><th>When</th><th>Student</th><th>Resource</th><th>Doctor</th><th>Preferred</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <% appointments.forEach(function(a){ %>
+            <tr>
+              <td><%= new Date(a.created_at).toLocaleString() %></td>
+              <td><%= a.student || 'Unknown' %></td>
+              <td><%= a.resource_title || a.resource_id || '-' %></td>
+              <td><%= a.assigned_doctor_name || a.doctor_name || (a.doctor_id ? a.doctor_id : '-') %></td>
+              <td><%= (a.preferred_date ? a.preferred_date : '') %> <%= (a.preferred_time ? a.preferred_time : '') %></td>
+              <td><%= a.message || '' %></td>
+              <td><%= a.status || 'pending' %></td>
+              <td>
+                <% if ((a.status || 'pending') === 'pending') { %>
+                  <form method="post" action="/admin/appointments/approve/<%= a.id %>" style="display:inline-block; margin-right:6px">
+                    <select name="doctor_id" class="form-select form-select-sm" style="display:inline-block; width:auto; vertical-align:middle">
+                      <option value="">Assign doctor (optional)</option>
+                      <% (doctors || []).forEach(function(doc){ %>
+                        <option value="<%= doc.id %>"><%= doc.name %></option>
+                      <% }) %>
+                    </select>
+                    <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                  </form>
+                  <form method="post" action="/admin/appointments/decline/<%= a.id %>" style="display:inline-block">
+                    <button class="btn btn-sm btn-danger" type="submit">Decline</button>
+                  </form>
+                <% } else { %>
+                  <small class="text-muted">No actions</small>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>

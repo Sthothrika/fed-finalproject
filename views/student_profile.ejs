@@ -1,28 +1,66 @@
 <div class="row">
   <div class="col-12 mb-4">
-    <h1>Profile — <%= user.full_name || user.username %></h1>
-    <p class="text-muted">Details and daily routine.</p>
+    <div class="page-hero">
+      <h1 class="title">Profile — <%= user.full_name || user.username %></h1>
+      <p class="subtitle">Details and daily routine.</p>
+    </div>
   </div>
 
-  <div class="col-md-6 mb-4">
-    <div class="card p-3 shadow-sm d-flex flex-row gap-3 align-items-center">
-      <div style="width:96px;height:96px;flex:0 0 96px">
-        <img src="<%= user.avatar || '/images/placeholder.svg' %>" alt="avatar" style="width:96px;height:96px;object-fit:cover;border-radius:10px;box-shadow:0 6px 18px rgba(16,24,40,0.06)">
+  <div class="col-12 mb-4">
+    <div class="profile-grid">
+      <div class="profile-left">
+        <div class="card p-3 shadow-sm d-flex gap-3">
+          <div style="display:flex;gap:18px;align-items:center">
+            <div class="avatar-ring">
+              <div class="avatar-inner">
+                <% if (user.avatar) { %>
+                  <img src="<%= user.avatar %>" alt="avatar">
+                <% } else { %>
+                  <% var displayName = user.full_name || user.username; var initials = (displayName || '').split(' ').map(function(n){return n ? n[0] : ''}).slice(0,2).join('').toUpperCase(); %>
+                  <div class="avatar-initials"><%= initials || 'S' %></div>
+                <% } %>
+              </div>
+            </div>
+            <div>
+              <h5>Details</h5>
+              <p class="text-muted"><strong>Username:</strong> <span class="text-dark"> <%= user.username %></span></p>
+              <p class="text-muted"><strong>Name:</strong> <span class="text-dark"> <%= user.full_name || 'Not set' %></span></p>
+              <p class="text-muted"><strong>Email:</strong> <span class="text-dark"> <%= user.email || 'Not set' %></span></p>
+              <p class="text-muted"><strong>Phone:</strong> <span class="text-dark"> <%= user.phone || 'Not set' %></span></p>
+              <p class="text-muted"><strong>Age:</strong> <span class="text-dark"> <%= typeof user.age !== 'undefined' && user.age !== null ? user.age : 'Not set' %></span></p>
+              <div class="profile-actions">
+                <a href="/student/profile/edit" class="btn btn-sm btn-edit">Edit profile</a>
+              </div>
+            </div>
+          </div>
+          <% if (user.programs) { %>
+            <div class="program-pills">
+              <% user.programs.split(',').map(p => p.trim()).filter(Boolean).forEach(function(pr){ %>
+                <span class="tag-badge"><%= pr %></span>
+              <% }) %>
+            </div>
+          <% } %>
+          <div class="profile-stats">
+            <div class="stat-pill">Enrolled: <%= user.programs ? user.programs.split(',').filter(Boolean).length : 0 %></div>
+            <div class="stat-pill">Views: <%= user.views || 0 %></div>
+          </div>
+        </div>
       </div>
-      <div>
-        <h5 class="mb-1">Details</h5>
-        <p class="mb-1"><strong>Username:</strong> <%= user.username %></p>
-        <p class="mb-1"><strong>Name:</strong> <%= user.full_name || 'Not set' %></p>
-        <p class="mb-1"><strong>Email:</strong> <%= user.email || 'Not set' %></p>
-        <p class="mb-1"><strong>Phone:</strong> <%= user.phone || 'Not set' %></p>
-        <% if (user.programs) { %>
-          <p class="mb-1"><strong>Programs:</strong>
-            <% user.programs.split(',').map(p => p.trim()).filter(Boolean).forEach(function(pr, idx){ %>
-              <span class="badge bg-secondary"><%= pr %></span>
-            <% }) %>
-          </p>
-        <% } %>
-        <p class="mb-0"><a href="/student/profile/edit" class="small">Edit profile</a></p>
+
+      <div class="profile-right">
+        <div class="card p-3 shadow-sm">
+          <h5>Daily Routine</h5>
+          <% if (routineLines && routineLines.length) { %>
+            <ul class="small text-muted">
+              <% routineLines.forEach(function(line){ %>
+                <li><%= line %></li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <p class="small text-muted">No routine set. Click edit to add one.</p>
+          <% } %>
+          <p class="mb-0"><a href="/student/profile/edit" class="small">Edit routine</a></p>
+        </div>
       </div>
     </div>
   </div>

@@ -73,9 +73,9 @@ async function ensureProfileColumns() {
     if (!names.includes('full_name')) toAdd.push("ALTER TABLE users ADD COLUMN full_name TEXT");
     if (!names.includes('email')) toAdd.push("ALTER TABLE users ADD COLUMN email TEXT");
     if (!names.includes('routine')) toAdd.push("ALTER TABLE users ADD COLUMN routine TEXT");
-    if (!names.includes('avatar')) toAdd.push("ALTER TABLE users ADD COLUMN avatar TEXT");
     if (!names.includes('phone')) toAdd.push("ALTER TABLE users ADD COLUMN phone TEXT");
     if (!names.includes('programs')) toAdd.push("ALTER TABLE users ADD COLUMN programs TEXT");
+    if (!names.includes('age')) toAdd.push("ALTER TABLE users ADD COLUMN age INTEGER");
     toAdd.forEach(sql => {
       userDbHandle.run(sql, (aErr) => {
         if (aErr) console.error('Error adding column', aErr);
@@ -95,26 +95,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Keep legacy mount for `/public/*` paths (some templates may reference it)
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// Multer setup for avatar uploads (store in public/uploads). If multer isn't installed, fall back
-// to a no-op middleware so the rest of the app continues to work.
-const uploadsDir = path.join(__dirname, 'public', 'uploads');
-let upload = (req, res, next) => next();
-try {
-  const _multer = require('multer');
-  const storage = _multer.diskStorage({
-    destination: (req, file, cb) => {
-      fs.mkdir(uploadsDir, { recursive: true }).then(() => cb(null, uploadsDir)).catch(() => cb(null, uploadsDir));
-    },
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname) || '.jpg';
-      const name = `${Date.now()}-${Math.round(Math.random()*1e6)}${ext}`;
-      cb(null, name);
-    }
-  });
-  upload = _multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
-} catch (e) {
-  console.warn('multer not installed; avatar upload disabled');
+// Simple server-side math captcha helper (no external keys needed)
+function generateCaptcha(req) {
+  // choose simple addition/subtraction
+  const a = Math.floor(Math.random() * 10) + 1; // 1..10
+  const b = Math.floor(Math.random() * 10) + 1; // 1..10
+  const op = Math.random() < 0.5 ? '+' : '-';
+  const question = `${a} ${op} ${b}`;
+  const answer = op === '+' ? (a + b) : (a - b);
+  // store the numeric answer in session for later validation
+  if (req && req.session) req.session.captchaAnswer = answer;
+  return { question, answer };
 }
+
+// Note: avatar upload support removed (we keep phone/programs fields only)
 
 async function readData() {
   try {
@@ -133,12 +127,16 @@ async function writeData(data) {
 // Landing (first page) - only login/signup links
 // Root now shows the unified auth page as the first page
 app.get('/', (req, res) => {
-  res.render('auth', { active: 'login', error: null, page: 'auth' });
+  // generate a simple math captcha for the login form
+  const captcha = generateCaptcha(req);
+  res.render('auth', { active: 'login', error: null, page: 'auth', captchaQuestion: captcha.question });
 });
 
 // Unified auth page
 app.get('/auth', (req, res) => {
-  res.render('auth', { active: 'login', error: null, page: 'auth' });
+  // generate a simple math captcha for the login form
+  const captcha = generateCaptcha(req);
+  res.render('auth', { active: 'login', error: null, page: 'auth', captchaQuestion: captcha.question });
 });
 
 // POST login from unified form
@@ -146,6 +144,14 @@ app.post('/auth/login', express.urlencoded({ extended: true }), (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   const role = req.body.role || 'student';
+  // validate captcha first
+  const provided = req.body.captcha_answer ? req.body.captcha_answer.toString().trim() : '';
+  const expected = req.session && (typeof req.session.captchaAnswer !== 'undefined') ? req.session.captchaAnswer.toString() : null;
+  if (!provided || !expected || provided !== expected) {
+    // regenerate captcha for the rendered form
+    const captcha = generateCaptcha(req);
+    return res.render('auth', { active: 'login', error: 'Captcha incorrect. Please try again.', page: 'auth', captchaQuestion: captcha.question });
+  }
   if (!username || !password) return res.render('auth', { active: 'login', error: 'Missing credentials', page: 'auth' });
   if (!userDbHandle) return res.render('auth', { active: 'login', error: 'Server not ready', page: 'auth' });
 
@@ -169,6 +175,8 @@ app.post('/auth/signup', express.urlencoded({ extended: true }), (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   const role = req.body.role || 'student';
+  const phone = req.body.phone ? req.body.phone.trim() : null;
+  const ageVal = req.body.age ? parseInt(req.body.age, 10) : null;
   if (!username || !password) return res.render('auth', { active: 'signup', error: 'Missing fields' });
     if (!username || !password) return res.render('auth', { active: 'signup', error: 'Missing fields', page: 'auth' });
   if (!userDbHandle) return res.render('auth', { active: 'signup', error: 'Server not ready' });
@@ -184,8 +192,12 @@ app.post('/auth/signup', express.urlencoded({ extended: true }), (req, res) => {
     bcrypt.hash(password, 10, (hashErr, hash) => {
       if (hashErr) return res.render('auth', { active: 'signup', error: 'Error creating account' });
         if (hashErr) return res.render('auth', { active: 'signup', error: 'Error creating account', page: 'auth' });
-        userDbHandle.run('INSERT INTO users (username, password, role) VALUES (?,?,?)', [username, hash, role], function(insErr) {
+        userDbHandle.run('INSERT INTO users (username, password, role, age, phone) VALUES (?,?,?,?,?)', [username, hash, role, ageVal, phone], function(insErr) {
           if (insErr) return res.render('auth', { active: 'signup', error: 'Could not create account', page: 'auth' });
+        if (role === 'admin') {
+          req.session.isAdmin = true;
+          return res.redirect('/admin');
+        }
         req.session.student = { username };
         return res.redirect('/resources');
       });
@@ -207,7 +219,17 @@ app.get('/resources/:id', async (req, res) => {
   if (!resource) return res.status(404).send('Resource not found');
   resource.views = (resource.views || 0) + 1;
   await writeData(data);
-  res.render('resource', { resource });
+  // load doctors for the booking form (if available)
+  let doctors = [];
+  try {
+    const file = path.join(__dirname, 'data', 'doctors.json');
+    const dtxt = await fs.readFile(file, 'utf8');
+    const djson = JSON.parse(dtxt || '{}');
+    doctors = djson.doctors || [];
+  } catch (e) {
+    doctors = [];
+  }
+  res.render('resource', { resource, doctors });
 });
 
 // Programs page (filter)
@@ -222,12 +244,64 @@ app.get('/support', (req, res) => {
   res.render('support');
 });
 
+// Doctors listing page
+app.get('/doctors', async (req, res) => {
+  try {
+    const file = path.join(__dirname, 'data', 'doctors.json');
+    let data = { doctors: [] };
+    try { data = JSON.parse(await fs.readFile(file, 'utf8')); } catch (e) { data = { doctors: [] }; }
+    return res.render('doctors', { doctors: data.doctors || [] });
+  } catch (err) {
+    console.error('Error loading doctors', err);
+    return res.render('doctors', { doctors: [] });
+  }
+});
+
+// Note: doctors are not exposed as a separate page; they are used in booking forms.
+
 // Health tips page: counseling, daily routines, yoga videos
 app.get('/health-tips', async (req, res) => {
   const data = await readData();
   // find any counseling resource to link from this page
   const counseling = (data.resources || []).find(r => r.category === 'mental-health');
   res.render('health_tips', { counseling });
+});
+
+// Counseling details (guides & motivation)
+app.get('/health-tips/counseling', async (req, res) => {
+  const data = await readData();
+  const resources = (data.resources || []).filter(r => r.category === 'mental-health');
+  res.render('health_counseling', { resources });
+});
+
+// Feedback page
+app.get('/feedback', (req, res) => {
+  res.render('feedback', { success: false, error: null });
+});
+
+app.post('/feedback', express.urlencoded({ extended: true }), async (req, res) => {
+  const name = req.body.name || '';
+  const email = req.body.email || '';
+  const message = req.body.message || '';
+  const rating = req.body.rating ? parseInt(req.body.rating, 10) : null;
+  const category = req.body.category || '';
+  let urgency = req.body.urgency || 'low';
+  // normalize urgency to expected values
+  if (!['low', 'medium', 'high'].includes(urgency)) urgency = 'low';
+  if (!message) return res.render('feedback', { success: false, error: 'Message is required' });
+  const item = { id: uuidv4(), name, email, message, rating, category, urgency, resolved: false, created_at: new Date().toISOString() };
+  const fbFile = path.join(__dirname, 'data', 'feedback.json');
+  try {
+    let existing = { feedback: [] };
+    try { existing = JSON.parse(await fs.readFile(fbFile, 'utf8')); } catch (e) { existing = { feedback: [] }; }
+    existing.feedback = existing.feedback || [];
+    existing.feedback.unshift(item);
+    await fs.writeFile(fbFile, JSON.stringify(existing, null, 2), 'utf8');
+    return res.render('feedback', { success: true, error: null });
+  } catch (err) {
+    console.error('Error saving feedback', err);
+    return res.render('feedback', { success: false, error: 'Could not save feedback' });
+  }
 });
 
 /* Admin routes - simple JSON-backed admin */
@@ -263,7 +337,8 @@ app.post('/admin/login', express.urlencoded({ extended: true }), (req, res) => {
     bcrypt.compare(pass, row.password, (bcryptErr, same) => {
       console.log(`Admin login attempt user="${user}" success=${!!same}`);
       if (bcryptErr || !same) return res.redirect('/admin/login?error=1');
-      req.session.isAdmin = true;
+        req.session.isAdmin = true;
+        req.session.admin = { username: user };
       return res.redirect('/admin');
     });
   });
@@ -279,29 +354,114 @@ app.get('/admin/signup', (req, res) => {
 app.post('/admin/signup', express.urlencoded({ extended: true }), (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  const phone = req.body.phone ? req.body.phone.trim() : null;
+  const ageVal = req.body.age ? parseInt(req.body.age, 10) : null;
   if (!username || !password) return res.render('admin_signup', { error: 'Username and password required' });
   if (!userDbHandle) return res.render('admin_signup', { error: 'Server not ready, try again' });
 
   // Create admin account. We rely on username uniqueness enforced by the DB; if the username exists insertion will fail.
   bcrypt.hash(password, 10, (hashErr, hash) => {
     if (hashErr) return res.render('admin_signup', { error: 'Error creating account' });
-    userDbHandle.run('INSERT INTO users (username, password, role) VALUES (?,?,?)', [username, hash, 'admin'], function(insErr) {
+    userDbHandle.run('INSERT INTO users (username, password, role, age, phone) VALUES (?,?,?,?,?)', [username, hash, 'admin', ageVal, phone], function(insErr) {
       if (insErr) {
         console.error('Error inserting admin user', insErr);
         return res.render('admin_signup', { error: 'Could not create admin (maybe username taken)' });
       }
       // Set session as admin and redirect
       req.session.isAdmin = true;
+      req.session.admin = { username };
       return res.redirect('/admin');
     });
   });
 });
 
 app.get('/admin', requireAdmin, async (req, res) => {
-  const data = await readData();
-  const resources = data.resources || [];
-  const total = resources.reduce((s, r) => s + (r.views || 0), 0);
-  res.render('admin', { resources, totalViews: total, resourceCount: resources.length });
+  try {
+    const data = await readData();
+    const resources = data.resources || [];
+    const total = resources.reduce((s, r) => s + (r.views || 0), 0);
+    // get student count from users DB
+    let studentCount = 0;
+    if (userDbHandle) {
+      studentCount = await new Promise((resolve) => {
+        userDbHandle.get("SELECT COUNT(*) AS cnt FROM users WHERE role = 'student'", (err, row) => {
+          if (err) return resolve(0);
+          return resolve(row && row.cnt ? row.cnt : 0);
+        });
+      });
+    }
+    // load feedback file and analyze
+    const fbFile = path.join(__dirname, 'data', 'feedback.json');
+    let feedbackData = { feedback: [] };
+    try { feedbackData = JSON.parse(await fs.readFile(fbFile, 'utf8')); } catch (e) { feedbackData = { feedback: [] }; }
+    const feedbackList = (feedbackData.feedback || []);
+    const feedbackCount = feedbackList.length;
+    const urgencyBreakdown = feedbackList.reduce((acc, it) => { const u = it.urgency || 'low'; acc[u] = (acc[u]||0)+1; return acc; }, {});
+    const categoryBreakdown = feedbackList.reduce((acc, it) => { const c = it.category || 'general'; acc[c] = (acc[c]||0)+1; return acc; }, {});
+    // recent 10
+    const recentFeedback = feedbackList.slice(0,10);
+    // top resources by views
+    const topResources = resources.slice().sort((a,b) => (b.views||0) - (a.views||0)).slice(0,5);
+    // counts by resource category
+    const resourceCategoryCounts = (resources || []).reduce((acc, r) => { const c = r.category || 'general'; acc[c] = (acc[c]||0)+1; return acc; }, {});
+    // recent logout events
+    const logoutFile = path.join(__dirname, 'data', 'logout_events.json');
+    let logoutData = { events: [] };
+    try { logoutData = JSON.parse(await fs.readFile(logoutFile, 'utf8')); } catch (e) { logoutData = { events: [] }; }
+    const recentLogouts = (logoutData.events || []).slice(0,10);
+    // recent signups from users DB (last 5 students)
+    let recentSignups = [];
+    if (userDbHandle) {
+      recentSignups = await new Promise((resolve) => {
+        userDbHandle.all("SELECT id, username, full_name, created_at FROM users WHERE role = 'student' ORDER BY created_at DESC LIMIT 5", (err, rows) => {
+          if (err) return resolve([]);
+          return resolve(rows || []);
+        });
+      });
+    }
+    return res.render('admin', { resources, totalViews: total, resourceCount: resources.length, studentCount, feedbackCount, urgencyBreakdown, categoryBreakdown, recentFeedback, topResources, resourceCategoryCounts, recentLogouts, recentSignups });
+  } catch (err) {
+    console.error('Error preparing admin dashboard', err);
+    const data = await readData();
+    const resources = data.resources || [];
+    const total = resources.reduce((s, r) => s + (r.views || 0), 0);
+    return res.render('admin', { resources, totalViews: total, resourceCount: resources.length, studentCount: 0, feedbackCount: 0, urgencyBreakdown: {}, categoryBreakdown: {}, recentFeedback: [], topResources: [], resourceCategoryCounts: {}, recentLogouts: [], recentSignups: [] });
+  }
+});
+
+// Admin: delete feedback entry
+app.post('/admin/feedback/delete/:id', requireAdmin, express.urlencoded({ extended: true }), async (req, res) => {
+  const fbFile = path.join(__dirname, 'data', 'feedback.json');
+  try {
+    let existing = { feedback: [] };
+    try { existing = JSON.parse(await fs.readFile(fbFile, 'utf8')); } catch (e) { existing = { feedback: [] }; }
+    existing.feedback = (existing.feedback || []).filter(f => f.id !== req.params.id);
+    await fs.writeFile(fbFile, JSON.stringify(existing, null, 2), 'utf8');
+    return res.redirect('/admin');
+  } catch (err) {
+    console.error('Error deleting feedback', err);
+    return res.redirect('/admin');
+  }
+});
+
+// Admin: toggle resolved state for feedback
+app.post('/admin/feedback/resolve/:id', requireAdmin, express.urlencoded({ extended: true }), async (req, res) => {
+  const fbFile = path.join(__dirname, 'data', 'feedback.json');
+  try {
+    let existing = { feedback: [] };
+    try { existing = JSON.parse(await fs.readFile(fbFile, 'utf8')); } catch (e) { existing = { feedback: [] }; }
+    existing.feedback = (existing.feedback || []).map(f => {
+      if (f.id === req.params.id) {
+        f.resolved = !f.resolved;
+      }
+      return f;
+    });
+    await fs.writeFile(fbFile, JSON.stringify(existing, null, 2), 'utf8');
+    return res.redirect('/admin');
+  } catch (err) {
+    console.error('Error toggling feedback resolved', err);
+    return res.redirect('/admin');
+  }
 });
 
 app.get('/admin/new', (req, res) => {
@@ -389,6 +549,8 @@ app.get('/student/signup', (req, res) => {
 app.post('/student/signup', express.urlencoded({ extended: true }), (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  const phone = req.body.phone ? req.body.phone.trim() : null;
+  const ageVal = req.body.age ? parseInt(req.body.age, 10) : null;
   if (!username || !password) return res.render('student_signup', { error: 'Username and password required' });
   if (!userDbHandle) return res.render('student_signup', { error: 'Server not ready, try again' });
 
@@ -402,7 +564,7 @@ app.post('/student/signup', express.urlencoded({ extended: true }), (req, res) =
 
     bcrypt.hash(password, 10, (hashErr, hash) => {
       if (hashErr) return res.render('student_signup', { error: 'Error creating account' });
-      userDbHandle.run('INSERT INTO users (username, password, role) VALUES (?,?,?)', [username, hash, 'student'], function(insErr) {
+        userDbHandle.run('INSERT INTO users (username, password, role, age, phone) VALUES (?,?,?,?,?)', [username, hash, 'student', ageVal, phone], function(insErr) {
         if (insErr) {
           console.error('Error inserting student user', insErr);
           return res.render('student_signup', { error: 'Could not create account' });
@@ -419,7 +581,7 @@ app.get('/student/dashboard', requireStudent, (req, res) => {
   const username = req.session.student && req.session.student.username;
   if (!username) return res.redirect('/student/login');
   if (!userDbHandle) return res.redirect('/student/login?error=1');
-  userDbHandle.get('SELECT id, username, full_name, email, routine, created_at FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
+  userDbHandle.get('SELECT id, username, full_name, email, routine, phone, age, programs, created_at FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
     if (err || !row) {
       return res.redirect('/student/login?error=1');
     }
@@ -433,7 +595,7 @@ app.get('/student/dashboard', requireStudent, (req, res) => {
 app.get('/student/profile', requireStudent, (req, res) => {
   const username = req.session.student && req.session.student.username;
   if (!username) return res.redirect('/student/login');
-  userDbHandle.get('SELECT id, username, full_name, email, routine, created_at FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
+  userDbHandle.get('SELECT id, username, full_name, email, routine, phone, age, programs, created_at FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
     if (err || !row) return res.redirect('/student/login?error=1');
     const routineLines = (row.routine || '').split('\n').filter(Boolean);
     res.render('student_profile', { user: row, routineLines });
@@ -451,42 +613,64 @@ app.get('/profile', (req, res) => {
 app.get('/student/profile/edit', requireStudent, (req, res) => {
   const username = req.session.student && req.session.student.username;
   if (!username) return res.redirect('/student/login');
-  userDbHandle.get('SELECT id, username, full_name, email, routine FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
+  userDbHandle.get('SELECT id, username, full_name, email, routine, phone, age, programs FROM users WHERE username = ? AND role = ?', [username, 'student'], (err, row) => {
     if (err || !row) return res.redirect('/student/login?error=1');
     res.render('student_profile_edit', { user: row, error: null });
   });
 });
 
-app.post('/student/profile/update', requireStudent, upload.single('avatar'), (req, res) => {
+function updateStudentProfileHandler(req, res) {
   const username = req.session.student && req.session.student.username;
   if (!username) return res.redirect('/student/login');
   const full_name = req.body.full_name || '';
   const email = req.body.email || '';
   const routine = req.body.routine || '';
   const phone = req.body.phone || '';
+  const ageVal = req.body.age ? parseInt(req.body.age, 10) : null;
   const programs = req.body.programs || '';
-  if (req.file) {
-    const avatarPath = '/uploads/' + req.file.filename;
-    userDbHandle.run('UPDATE users SET full_name = ?, email = ?, routine = ?, avatar = ?, phone = ?, programs = ? WHERE username = ? AND role = ?', [full_name, email, routine, avatarPath, phone, programs, username, 'student'], function(err) {
-      if (err) {
-        console.error('Profile update error', err);
-        return res.render('student_profile_edit', { user: { username, full_name, email, routine, phone, programs }, error: 'Could not save profile' });
-      }
-      return res.redirect('/student/profile');
-    });
-  } else {
-    userDbHandle.run('UPDATE users SET full_name = ?, email = ?, routine = ?, phone = ?, programs = ? WHERE username = ? AND role = ?', [full_name, email, routine, phone, programs, username, 'student'], function(err) {
-      if (err) {
-        console.error('Profile update error', err);
-        return res.render('student_profile_edit', { user: { username, full_name, email, routine, phone, programs }, error: 'Could not save profile' });
-      }
-      return res.redirect('/student/profile');
-    });
-  }
+  userDbHandle.run('UPDATE users SET full_name = ?, email = ?, routine = ?, phone = ?, programs = ?, age = ? WHERE username = ? AND role = ?', [full_name, email, routine, phone, programs, ageVal, username, 'student'], function(err) {
+    if (err) {
+      console.error('Profile update error', err);
+      return res.render('student_profile_edit', { user: { username, full_name, email, routine, phone, programs }, error: 'Could not save profile' });
+    }
+    return res.redirect('/student/profile');
+  });
+}
+
+app.post('/student/profile/update', requireStudent, express.urlencoded({ extended: true }), updateStudentProfileHandler);
+
+// Show logout confirmation page (GET) and perform logout (POST)
+app.get('/logout', (req, res) => {
+  // Render a small confirmation page before destroying the session
+  res.render('logout', { page: 'logout' });
 });
 
-app.get('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+app.post('/logout', express.urlencoded({ extended: true }), (req, res) => {
+  (async () => {
+    try {
+      // record logout event for analytics
+      const fbDir = path.join(__dirname, 'data');
+      const outFile = path.join(fbDir, 'logout_events.json');
+      await fs.mkdir(fbDir, { recursive: true });
+      let existing = { events: [] };
+      try { existing = JSON.parse(await fs.readFile(outFile, 'utf8')); } catch (e) { existing = { events: [] }; }
+      const event = {
+        id: uuidv4(),
+        username: req.session && req.session.student ? req.session.student.username : (req.session && req.session.isAdmin ? 'admin' : null),
+        role: req.session && req.session.isAdmin ? 'admin' : (req.session && req.session.student ? 'student' : 'guest'),
+        ip: req.ip || req.connection && req.connection.remoteAddress || null,
+        created_at: new Date().toISOString()
+      };
+      existing.events = existing.events || [];
+      existing.events.unshift(event);
+      await fs.writeFile(outFile, JSON.stringify(existing, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Failed to record logout event', err);
+    } finally {
+      // destroy session and redirect regardless of analytics result
+      req.session.destroy(() => res.redirect('/'));
+    }
+  })();
 });
 
 // Minimal health metrics endpoint
@@ -494,6 +678,159 @@ app.get('/metrics', async (req, res) => {
   const data = await readData();
   const total = (data.resources || []).reduce((s, r) => s + (r.views || 0), 0);
   res.json({ totalViews: total, resourceCount: (data.resources || []).length });
+});
+
+// Preview endpoint: fetch external URL and return basic metadata (title, description)
+app.get('/preview', async (req, res) => {
+  const url = req.query.url;
+  if (!url || !(url.startsWith('http://') || url.startsWith('https://'))) {
+    return res.status(400).json({ error: 'Invalid or missing url parameter' });
+  }
+  try {
+    // Use global fetch (Node 18+) if available
+    if (typeof fetch !== 'function') return res.status(500).json({ error: 'Server fetch not available' });
+    const resp = await fetch(url, { redirect: 'follow' });
+    const text = await resp.text();
+    // crude metadata extraction
+    const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i);
+    const descMatch = text.match(/<meta\s+(?:name|property)=["'](?:description|og:description)["']\s+content=["']([^"']*)["']/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    const description = descMatch ? descMatch[1].trim() : '';
+    return res.json({ url, title, description });
+  } catch (err) {
+    console.error('Preview fetch error for', url, err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Could not fetch preview' });
+  }
+});
+
+// Appointment booking: students submit requests which are saved for admin review
+app.post('/appointments/request', requireStudent, express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const dataDir = path.join(__dirname, 'data');
+    await fs.mkdir(dataDir, { recursive: true });
+    const outFile = path.join(dataDir, 'appointments.json');
+    let existing = { appointments: [] };
+    try { existing = JSON.parse(await fs.readFile(outFile, 'utf8')); } catch (e) { existing = { appointments: [] }; }
+    const student = req.session && req.session.student ? req.session.student.username : null;
+    // try to attach doctor info if provided
+    let doctor_id = req.body.doctor_id || null;
+    let doctor_name = null;
+    if (doctor_id) {
+      try {
+        const dfile = path.join(__dirname, 'data', 'doctors.json');
+        const dtxt = await fs.readFile(dfile, 'utf8');
+        const djson = JSON.parse(dtxt || '{}');
+        const found = (djson.doctors || []).find(dd => dd.id === doctor_id);
+        if (found) doctor_name = found.name;
+      } catch (e) {
+        doctor_name = null;
+      }
+    }
+
+    const item = {
+      id: uuidv4(),
+      student: student,
+      resource_id: req.body.resource_id || null,
+      resource_title: req.body.resource_title || null,
+      doctor_id: doctor_id,
+      doctor_name: doctor_name,
+      preferred_date: req.body.preferred_date || null,
+      preferred_time: req.body.preferred_time || null,
+      message: req.body.message || '',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+    existing.appointments = existing.appointments || [];
+    existing.appointments.unshift(item);
+    await fs.writeFile(outFile, JSON.stringify(existing, null, 2), 'utf8');
+    // If this was an AJAX request, return JSON so the client can show an in-modal confirmation.
+    if (req.xhr || (req.headers && req.headers.accept && req.headers.accept.indexOf('application/json') !== -1)) {
+      return res.json({ success: true, id: item.id });
+    }
+    // otherwise redirect back to resource page with booking flag
+    const back = req.body.resource_id ? '/resources/' + encodeURIComponent(req.body.resource_id) + '?booked=1' : '/resources?booked=1';
+    return res.redirect(back);
+  } catch (err) {
+    console.error('Error saving appointment request', err);
+    return res.redirect('/resources');
+  }
+});
+
+// Admin: view appointment requests
+app.get('/admin/appointments', requireAdmin, async (req, res) => {
+  try {
+    const outFile = path.join(__dirname, 'data', 'appointments.json');
+    let existing = { appointments: [] };
+    try { existing = JSON.parse(await fs.readFile(outFile, 'utf8')); } catch (e) { existing = { appointments: [] }; }
+    const appointments = existing.appointments || [];
+    // load doctors for admin assignment options
+    let doctors = [];
+    try {
+      const dfile = path.join(__dirname, 'data', 'doctors.json');
+      const dtxt = await fs.readFile(dfile, 'utf8');
+      const djson = JSON.parse(dtxt || '{}');
+      doctors = djson.doctors || [];
+    } catch (e) { doctors = []; }
+    return res.render('admin_appointments', { appointments, doctors });
+  } catch (err) {
+    console.error('Could not load appointments', err);
+    return res.render('admin_appointments', { appointments: [], doctors: [] });
+  }
+});
+
+// Admin: approve appointment (optionally assign doctor)
+app.post('/admin/appointments/approve/:id', requireAdmin, express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const outFile = path.join(__dirname, 'data', 'appointments.json');
+    let existing = { appointments: [] };
+    try { existing = JSON.parse(await fs.readFile(outFile, 'utf8')); } catch (e) { existing = { appointments: [] }; }
+    const appts = existing.appointments || [];
+    const idx = appts.findIndex(a => a.id === req.params.id);
+    if (idx === -1) return res.redirect('/admin/appointments');
+    const doctor_id = req.body.doctor_id || null;
+    let doctor_name = null;
+    if (doctor_id) {
+      try {
+        const dfile = path.join(__dirname, 'data', 'doctors.json');
+        const dtxt = await fs.readFile(dfile, 'utf8');
+        const djson = JSON.parse(dtxt || '{}');
+        const found = (djson.doctors || []).find(dd => dd.id === doctor_id);
+        if (found) doctor_name = found.name;
+      } catch (e) { doctor_name = null; }
+    }
+    appts[idx].status = 'approved';
+    appts[idx].assigned_doctor_id = doctor_id;
+    appts[idx].assigned_doctor_name = doctor_name;
+    appts[idx].approved_by = (req.session && req.session.admin && req.session.admin.username) ? req.session.admin.username : 'admin';
+    appts[idx].approved_at = new Date().toISOString();
+    existing.appointments = appts;
+    await fs.writeFile(outFile, JSON.stringify(existing, null, 2), 'utf8');
+    return res.redirect('/admin/appointments');
+  } catch (err) {
+    console.error('Error approving appointment', err);
+    return res.redirect('/admin/appointments');
+  }
+});
+
+// Admin: decline appointment
+app.post('/admin/appointments/decline/:id', requireAdmin, express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    const outFile = path.join(__dirname, 'data', 'appointments.json');
+    let existing = { appointments: [] };
+    try { existing = JSON.parse(await fs.readFile(outFile, 'utf8')); } catch (e) { existing = { appointments: [] }; }
+    const appts = existing.appointments || [];
+    const idx = appts.findIndex(a => a.id === req.params.id);
+    if (idx === -1) return res.redirect('/admin/appointments');
+    appts[idx].status = 'declined';
+    appts[idx].declined_by = (req.session && req.session.admin && req.session.admin.username) ? req.session.admin.username : 'admin';
+    appts[idx].declined_at = new Date().toISOString();
+    existing.appointments = appts;
+    await fs.writeFile(outFile, JSON.stringify(existing, null, 2), 'utf8');
+    return res.redirect('/admin/appointments');
+  } catch (err) {
+    console.error('Error declining appointment', err);
+    return res.redirect('/admin/appointments');
+  }
 });
 
 // Admin-friendly metrics page (HTML + chart)

@@ -1,4 +1,5 @@
 <div class="card shadow-sm">
+  <% var doctors = typeof doctors !== 'undefined' ? doctors : []; %>
   <div class="resource-hero">
     <img src="<%= resource.image %>" class="resource-hero-image" alt="<%= resource.title %>">
   </div>
@@ -6,9 +7,218 @@
     <h2 class="card-title"><%= resource.title %></h2>
     <p class="text-muted small">Category: <%= resource.category %> • Views: <%= resource.views || 0 %></p>
     <p class="card-text"><%= resource.description %></p>
+    <% if (resource.category === 'mental-health') { %>
+      <hr>
+      <h6>How to access counseling</h6>
+      <p class="small text-muted">Counseling is free and confidential for students. To book an appointment:</p>
+      <ol>
+        <li>Visit the booking page linked below.</li>
+        <li>Select a time slot or check drop-in hours.</li>
+        <li>If you're in crisis, call your local emergency number or the campus crisis line immediately.</li>
+      </ol>
+      <p class="small"><strong>Phone:</strong> (555) 555-1212 • <strong>Email:</strong> counseling@example.edu</p>
+    <% } else if (resource.category === 'program') { %>
+      <hr>
+      <h6>Program details</h6>
+      <p class="small text-muted">Typical program offerings include group classes, personalized plans, and progress tracking.</p>
+      <ul>
+        <li>Weekly classes (e.g., cardio, strength, HIIT).</li>
+        <li>Personal plan creation with a coach.</li>
+        <li>Open to all fitness levels.</li>
+      </ul>
+      <p class="small text-muted">To join: follow the link below or contact the fitness center.</p>
+    <% } else if (resource.category === 'nutrition') { %>
+      <hr>
+      <h6>Nutrition tips & sample day</h6>
+      <p class="small text-muted">A quick balanced day for students:</p>
+      <ul>
+        <li>Breakfast: Oatmeal with fruit and nuts.</li>
+        <li>Lunch: Grain bowl with protein and vegetables.</li>
+        <li>Snack: Yogurt or hummus with veg sticks.</li>
+        <li>Dinner: Stir-fry with lean protein and brown rice.</li>
+      </ul>
+      <p class="small text-muted">Schedule an advising session using the link below for personalized plans.</p>
+    <% } else if (resource.category === 'health-tip' || resource.category === 'daily-routine') { %>
+      <hr>
+      <h6>Daily routine suggestions</h6>
+      <p class="small text-muted">Try this short routine to boost wellbeing:</p>
+      <ul>
+        <li>Morning: 5 minutes of light stretching and 2 deep breaths.</li>
+        <li>Midday: 10-minute walk or movement break.</li>
+        <li>Evening: 10 minutes of journaling or guided relaxation.</li>
+      </ul>
+      <% if (resource.category === 'daily-routine') { %>
+        <p class="small text-muted">You may also find guided videos on the Health Tips page.</p>
+      <% } %>
+    <% } else if (resource.category === 'yoga') { %>
+      <hr>
+      <h6>Yoga for beginners</h6>
+      <p class="small text-muted">This program includes gentle sequences focusing on breath and alignment.</p>
+      <div class="ratio ratio-16x9 mb-3">
+        <iframe src="https://www.youtube.com/embed/v7AYKMP6rOE" title="Beginner Yoga" allowfullscreen style="border:0;width:100%;height:100%;"></iframe>
+      </div>
+      <p class="small text-muted">Use the link below for more classes and scheduling.</p>
+    <% } %>
     <div class="mt-3">
-      <a href="<%= resource.link %>" class="btn btn-primary" target="_blank">Visit resource</a>
+      <button id="viewResourceBtn" class="btn btn-primary">View resource</button>
       <a href="/resources" class="btn btn-outline-secondary">Back</a>
     </div>
   </div>
 </div>
+
+<!-- Resource preview modal (prevents immediate navigation) -->
+<div id="resourcePreviewModal" class="resource-modal" aria-hidden="true" style="display:none; position:fixed; inset:0; z-index:1200;">
+  <div class="resource-modal-backdrop" style="position:fixed; inset:0; background:rgba(2,6,23,0.5);"></div>
+  <div class="resource-modal-panel" role="dialog" aria-modal="true" aria-labelledby="resourcePreviewTitle" style="position:relative; max-width:820px; margin:5% auto; background:white; border-radius:8px; padding:20px; box-shadow:0 10px 40px rgba(2,6,23,0.2);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h4 id="resourcePreviewTitle"><%= resource.title %></h4>
+      <button id="resourcePreviewClose" class="btn-close" aria-label="Close" style="background:none;border:0;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="color:#374151;">
+      <p class="text-muted small">Category: <strong><%= resource.category %></strong> • Views: <%= resource.views || 0 %></p>
+      <p><%= resource.description %></p>
+      <% if (resource.category === 'mental-health') { %>
+        <p class="small text-muted"><strong>Access:</strong> Book appointments via the external booking link, or call the campus crisis line for immediate help.</p>
+      <% } %>
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+        <% if (resource.link && resource.link !== '#') { %>
+          <button id="resourceExternalPreviewBtn" data-link="<%= resource.link %>" class="btn btn-primary">Open external site</button>
+        <% } else { %>
+          <button class="btn btn-secondary" disabled>No external link</button>
+        <% } %>
+        <% if (resource.category === 'mental-health') { %>
+          <button id="bookApptBtn" class="btn btn-outline-success">Book appointment</button>
+        <% } %>
+        <a href="/resources" class="btn btn-outline-secondary">Back to list</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const openBtn = document.getElementById('viewResourceBtn');
+    const modal = document.getElementById('resourcePreviewModal');
+    const closeBtn = document.getElementById('resourcePreviewClose');
+    const backdrop = modal && modal.querySelector('.resource-modal-backdrop');
+    function show(){ if(modal){ modal.style.display='block'; modal.setAttribute('aria-hidden','false'); } }
+    function hide(){ if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } }
+    if(openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); show(); });
+      // External preview button - fetch metadata from server and show inside modal (or open in new tab on failure)
+      const extBtn = document.getElementById('resourceExternalPreviewBtn');
+      if (extBtn) {
+        extBtn.addEventListener('click', async function(e){
+          e.preventDefault();
+          const link = extBtn.getAttribute('data-link');
+          if (!link) return;
+          // show loading state
+          const origText = extBtn.textContent;
+          extBtn.textContent = 'Loading…';
+          try {
+            const resp = await fetch('/preview?url=' + encodeURIComponent(link));
+            if (!resp.ok) throw new Error('Preview fetch failed');
+            const j = await resp.json();
+            // Insert preview info into modal
+            const panel = modal && modal.querySelector('.resource-modal-panel');
+            if (panel) {
+              // remove any existing preview box
+              const existing = panel.querySelector('.external-preview-box');
+              if (existing) existing.remove();
+              const box = document.createElement('div');
+              box.className = 'external-preview-box';
+              box.style.marginTop = '12px';
+              box.innerHTML = `
+                <div style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;background:#fafafa">
+                  <div style="font-weight:600;margin-bottom:6px">Preview: <a href="${link}" target="_blank" rel="noopener noreferrer">${j.title || link}</a></div>
+                  <div style="color:#6b7280">${j.description || 'No description available.'}</div>
+                  <div style="margin-top:8px"><a class="btn btn-sm btn-outline-primary" href="${link}" target="_blank" rel="noopener noreferrer">Open in new tab</a></div>
+                </div>
+              `;
+              panel.querySelector('div[style]') && panel.insertBefore(box, panel.querySelector('div[style]').nextSibling);
+            }
+          } catch (err) {
+            // fallback: open in new tab
+            window.open(link, '_blank');
+          } finally {
+            extBtn.textContent = origText;
+          }
+        });
+      }
+    if(closeBtn) closeBtn.addEventListener('click', hide);
+    if(backdrop) backdrop.addEventListener('click', hide);
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hide(); });
+    // Booking form toggle and handling (for mental-health resources)
+    const bookBtn = document.getElementById('bookApptBtn');
+    if (bookBtn) {
+      bookBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        const panel = modal && modal.querySelector('.resource-modal-panel');
+        if (!panel) return;
+        // toggle the booking form area
+        let formBox = panel.querySelector('.appointment-form-box');
+        if (formBox) {
+          formBox.remove();
+          return;
+        }
+        formBox = document.createElement('div');
+        formBox.className = 'appointment-form-box';
+        formBox.style.marginTop = '12px';
+        formBox.innerHTML = `
+          <form method="post" action="/appointments/request" style="padding:12px;border:1px solid #e6e6e6;border-radius:6px;background:#fff">
+            <input type="hidden" name="resource_id" value="<%= resource.id %>">
+            <input type="hidden" name="resource_title" value="<%= (resource.title||'') %>">
+            <div style="margin-bottom:8px">
+              <label class="small">Preferred doctor</label>
+              <select name="doctor_id" class="form-control">
+                <option value="">Any available</option>
+                <% (doctors || []).forEach(function(doc){ %>
+                  <option value="<%= doc.id %>"><%= doc.name %> — <%= doc.title %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div style="margin-bottom:8px"><label class="small">Preferred date</label><input name="preferred_date" type="date" class="form-control" required></div>
+            <div style="margin-bottom:8px"><label class="small">Preferred time</label><input name="preferred_time" type="time" class="form-control"></div>
+            <div style="margin-bottom:8px"><label class="small">Message / reason</label><textarea name="message" class="form-control" rows="3" placeholder="Optional details"></textarea></div>
+            <div style="display:flex;gap:8px"><button type="submit" class="btn btn-success">Request appointment</button><button type="button" id="cancelApptBtn" class="btn btn-outline-secondary">Cancel</button></div>
+          </form>
+        `;
+        panel.appendChild(formBox);
+        const cancel = panel.querySelector('#cancelApptBtn'); if (cancel) cancel.addEventListener('click', function(){ formBox.remove(); });
+        // attach AJAX submit handler to show in-modal confirmation
+        const form = panel.querySelector('.appointment-form-box form');
+        if (form) {
+          form.addEventListener('submit', async function(ev){
+            ev.preventDefault();
+            const fd = new FormData(form);
+            try {
+              const resp = await fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+              if (resp.ok) {
+                const j = await resp.json();
+                // show confirmation box
+                const existingConf = panel.querySelector('.booking-confirmation-box'); if (existingConf) existingConf.remove();
+                const conf = document.createElement('div');
+                conf.className = 'booking-confirmation-box';
+                conf.style.marginTop = '12px';
+                conf.innerHTML = `
+                  <div style="padding:12px;border:1px solid #d1fae5;border-radius:6px;background:#ecfdf5;color:#065f46">
+                    <strong>Request received</strong>
+                    <div class="small">Your appointment request has been submitted. We'll notify you when it's approved.</div>
+                  </div>
+                `;
+                form.remove();
+                panel.appendChild(conf);
+              } else {
+                // if redirect to login or other, follow it
+                if (resp.redirected) { window.location = resp.url; return; }
+                alert('Could not submit request');
+              }
+            } catch (err) {
+              console.error('Booking submit error', err);
+              alert('Failed to submit request');
+            }
+          });
+        }
+      });
+    }
+  })();
+</script>

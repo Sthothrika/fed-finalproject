@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <rect width="100%" height="100%" fill="#f0f9ff"/>
+  <circle cx="300" cy="140" r="80" fill="#bfdbfe" />
+  <rect x="170" y="230" width="260" height="120" rx="12" fill="#ffedd5" />
+  <text x="300" y="260" font-family="Inter, Arial" font-size="20" text-anchor="middle" fill="#082032">Dr. Sunitha</text>
+  <text x="300" y="290" font-family="Inter, Arial" font-size="14" text-anchor="middle" fill="#082032">Primary Care Physician</text>
+</svg>

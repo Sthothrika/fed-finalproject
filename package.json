@@ -4,7 +4,10 @@
   "description": "StuHealth - Student Health & Wellness platform (minimal prototype)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:foreground": "node server.js",
+    "build": "echo \"No build step for this Node/Express app\"",
+    "restart:windows": "powershell -ExecutionPolicy Bypass -File ./scripts/restart-server.ps1"
   },
   "keywords": [
     "health",
@@ -22,7 +25,6 @@
     "express-session": "^1.17.3",
     "dotenv": "^16.3.1",
     "sqlite3": "^5.1.6",
-    "bcrypt": "^5.1.0",
-    "multer": "^1.4.5"
+    "bcrypt": "^5.1.0"
   }
 }

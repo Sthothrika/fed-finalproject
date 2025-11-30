@@ -1,0 +1,20 @@
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="page-hero">
+      <h1 class="title">Log out</h1>
+      <p class="subtitle">Are you sure you want to sign out of StuHealth?</p>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card p-4 shadow-sm">
+      <form method="post" action="/logout">
+        <p class="small text-muted">Signing out will end your current session. You can sign in again from the login page.</p>
+        <div class="d-flex gap-2">
+          <button class="btn btn-danger">Sign out</button>
+          <a href="<%= (session && session.isAdmin) ? '/admin' : (session && session.student ? '/student/dashboard' : '/') %>" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

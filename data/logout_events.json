@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "id": "f4c2a8bf-c525-469f-b636-a300399f49f9",
+      "username": null,
+      "role": "guest",
+      "ip": "::1",
+      "created_at": "2025-11-29T21:29:51.938Z"
+    },
+    {
+      "id": "4db3caa9-4f9f-4950-b05d-30369ad4fedf",
+      "username": "2400032239@kluniversity.in",
+      "role": "student",
+      "ip": "::1",
+      "created_at": "2025-11-29T21:07:31.736Z"
+    },
+    {
+      "id": "aab3dd3e-49fd-464f-a993-0574f6c623ba",
+      "username": "2400032239@kluniversity.in",
+      "role": "admin",
+      "ip": "::1",
+      "created_at": "2025-11-29T20:55:50.525Z"
+    },
+    {
+      "id": "4b14c8a9-4c91-4ed5-b1bb-39b6e33105a7",
+      "username": null,
+      "role": "guest",
+      "ip": "::1",
+      "created_at": "2025-11-29T20:32:20.539Z"
+    }
+  ]
+}

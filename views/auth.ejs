@@ -32,6 +32,14 @@
               <option value="admin">Admin</option>
             </select>
           </div>
+          <div class="mb-3">
+            <% if (typeof captchaQuestion !== 'undefined') { %>
+              <label class="form-label">Captcha: <strong><%= captchaQuestion %> = ?</strong></label>
+            <% } else { %>
+              <label class="form-label">Captcha</label>
+            <% } %>
+            <input name="captcha_answer" class="form-control" placeholder="Enter captcha result" required>
+          </div>
           <div class="d-grid">
             <button class="btn btn-lg btn-danger">Login</button>
           </div>
@@ -49,6 +57,14 @@
           </div>
           <div class="mb-3">
             <input name="password" type="password" class="form-control" placeholder="Choose a password" required>
+          </div>
+          <div class="row gx-2">
+            <div class="col-md-6 mb-3">
+              <input name="age" type="number" min="0" class="form-control" placeholder="Age (optional)">
+            </div>
+            <div class="col-md-6 mb-3">
+              <input name="phone" type="text" class="form-control" placeholder="Phone number (optional)">
+            </div>
           </div>
           <div class="mb-3">
             <select name="role" class="form-select">

@@ -1,0 +1,52 @@
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="page-hero">
+      <h1 class="title">Counseling & Support</h1>
+      <p class="subtitle">Guides, motivations, and campus counseling resources.</p>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card p-3 shadow-sm">
+      <h5>Guides</h5>
+      <ul class="small text-muted">
+        <li>How to book a counseling appointment — call or use the campus portal.</li>
+        <li>Preparing for your first counseling session — what to expect and how to set goals.</li>
+        <li>Self-help guides: breathing exercises, grounding techniques, and sleep hygiene.</li>
+      </ul>
+      <p class="mt-2"><a href="/resources" class="small">See campus resource listings</a></p>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card p-3 shadow-sm">
+      <h5>Motivation</h5>
+      <p class="small text-muted">Here are short motivational prompts and habits you can try today:</p>
+      <ul class="small text-muted">
+        <li>Set one simple goal for today and celebrate completion.</li>
+        <li>Reach out to one friend or campus contact — social connection supports wellbeing.</li>
+        <li>Try a 5-minute breathing exercise: inhale 4s — hold 4s — exhale 6s.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-12 mt-3">
+    <div class="card p-3 shadow-sm">
+      <h5>Campus Counseling Resources</h5>
+      <% if (resources && resources.length) { %>
+        <% resources.forEach(function(r){ %>
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="/images/icons/mental-health.svg" alt="icon" style="width:56px;height:56px;object-fit:cover;border-radius:8px">
+            <div>
+              <div class="fw-bold"><%= r.title %></div>
+              <div class="small text-muted"><%= r.description %></div>
+              <div class="mt-1"><a href="<%= r.link %>" target="_blank" class="small">Open</a></div>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p class="small text-muted">No specific counseling resources found. Browse campus resources.</p>
+      <% } %>
+    </div>
+  </div>
+</div>

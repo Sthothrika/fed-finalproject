@@ -7,7 +7,7 @@
       "category": "mental-health",
       "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=5d7b1ad3b1b4b87f1b1d23f0f3f8a7c7",
       "link": "https://www.example.edu/counseling",
-      "views": 16
+      "views": 41
     },
     {
       "id": "res-2",
@@ -16,7 +16,7 @@
       "category": "program",
       "image": "/images/fitness.svg",
       "link": "https://www.example.edu/fitness",
-      "views": 9
+      "views": 12
     },
     {
       "id": "res-3",
@@ -25,7 +25,7 @@
       "category": "nutrition",
       "image": "/images/nutrition.svg",
       "link": "https://www.example.edu/nutrition",
-      "views": 5
+      "views": 6
     },
     {
       "id": "res-4",
@@ -34,7 +34,7 @@
       "category": "health-tip",
       "image": "/images/mental_health.svg",
       "link": "https://www.example.edu/daily-routines",
-      "views": 0
+      "views": 1
     },
     {
       "id": "res-5",
@@ -43,7 +43,7 @@
       "category": "yoga",
       "image": "/images/fitness.svg",
       "link": "https://www.example.edu/yoga",
-      "views": 0
+      "views": 1
     }
   ]
 }

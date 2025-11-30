@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="88" height="88" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nutrition icon">
+  <defs>
+    <linearGradient id="nut" x1="0" x2="1">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="88" height="88" rx="12" fill="#fbfffb"/>
+  <g transform="translate(18,14)">
+    <circle cx="26" cy="22" r="14" fill="url(#nut)"/>
+    <path d="M18 24 q8 -8 16 0" stroke="#0f5132" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

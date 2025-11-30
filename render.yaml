@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: stuhealth
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: SESSION_SECRET
+        sync: false
